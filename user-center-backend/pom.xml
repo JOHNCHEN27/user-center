@@ -112,7 +112,8 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.lncanswer.usercenterbackend.UserCenterBackendApplication</mainClass>
-                    <skip>true</skip>
+                    <!-- 利用maven打包 不跳过 把skip调为false                    -->
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>
