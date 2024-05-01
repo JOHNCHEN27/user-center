@@ -224,6 +224,21 @@ generateAllSetDefault插件，可以在新创建的对象快速设置默认值�
 
 ## 项目部署
 
+项目部署的方式有多种，原生部署、宝塔部署、docker部署、docker平台部署等，根据实际情况选择相应的部署方式
+
+**本项目采用docker部署，前端使用Nginx.conf 以及 Dockerfile文件部署； 后端采用Dockerfile部署**
+
+总体可分为四步：
+
+1. 编写Dockerfile文件，文件中编写构建项目基础配置内容
+2. 打包前端后端项目，上传至云服务器指定目录
+3. 根据Dockerfile文件以及相关配置文件（nginx.conf）和项目打包文件构建项目镜像
+4. 根据项目镜像创建并运行项目容器
+
+注意点： Nginx.conf配置，Dockerfile文件的编写，跨域配置
+
+**下面内容是详细项目上线的步骤方法** ⬇
+
 ### 多环境
 
 同一套项目在不同阶段需要根据实际情况来调整部署配置到不同的机器上
@@ -299,7 +314,7 @@ java -jar .\user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
    4. 项目端口号
 2. 服务器配置
 
-SpringBoot配置文件加载有优先级，当存在两个不同的配置文件时，指定的配置文件中如果和其他配置文件有相同的部分，则会覆盖相同的部分，以指定的配置文件为准， 与其他配置文件不相同的内容共存。
+SpringBoot配置文件加载有**优先级**，当存在两个不同的配置文件时，指定的配置文件中如果和其他配置文件有相同的部分，则会覆盖相同的部分，以指定的配置文件为准， 与其他配置文件不相同的内容共存。
 
 **本质上是相同覆盖，不同合并**
 
@@ -553,3 +568,144 @@ docker network connect 网络名 容器名
 
 如果我们是将前端、后端、数据库、redis等部署到一个云服务器上，那么我们最好把他们都加入到一个网络中，这样**在前端后端项目配置文件配置数据库地址或者配置后端地址时，我们可以直接填写容器名**，因为它们都在一个网络中，可以通过容器名访问项目，不需要填写地址，方便维护。
 
+
+
+#### docker容器平台部署
+
+1、云服务器商的容器平台（腾讯云、阿里云）
+
+2、面向某个领域的容器平台（前端webify、后端微信云托管，**需要花钱**）
+
+
+
+容器平台好处：
+
+1. 不用输命令来操作，更方便省事
+2. 不用在控制台操作，更傻瓜式
+3. 大厂运维，比自己运维更省心
+4. 额外的能力，比如监控、告警
+
+
+
+#### Nginx反向代理
+
+监听相应端口号，转发请求给后端服务器
+
+```nginx
+#nginx反向代理配置
+#路由转发配置
+    server {
+        listen      80;     #监听到80
+    
+       	gzip on;
+    	gzip_min_length 1k;
+    	gzip_comp_level 9;
+    	gzip_types text/plain text/css text/javascript application/json application/javascript application/x-javascript application/xml;
+    	gzip_vary on;
+    	gzip_disable "MSIE [1-6]\.";
+
+    	root /usr/share/nginx/html;
+    	include /etc/nginx/mime.types;
+
+    
+    	#找到nginx目录下的前端项目文件
+    	location / {
+        try_files $uri /index.html;
+    	}
+    	#nginx反向代理， api开头的路径代理到相应的后端服务
+    	location ^~ /api {
+       	 proxy_set_header Host $host;      #proxy_pass 请求转发地址为本机
+       	 proxy_pass    http://ks.lncanswer.cn:8080;  #ks.lncanswer.cn是域名，8080为后端服务所在的端口号
+        #如果前端后端都用容器部署，且在同一个网络中，那么可以用 http://后端服务容器名 : 容器端口号  来代理到后端项目
+    }
+       
+       
+    }
+```
+
+如果利用Dockerfile构建Nginx ，**注意Nginx文件只需要配置server**，**加上其他未报错，暂未找到具体解决方法** 
+
+
+
+### 跨域问题解决
+
+当前端后端域名以及端口（ip）不相同时就是跨域访问，需要在nginx服务器配置或者后端项目配置跨域信息，允许跨域访问
+
+**对于跨域配置只需要配置前端Nginx或者后端一个即可**
+
+**1、Nginx跨域配置**
+
+```nginx
+#在nginx.conf配置文件中添加如下跨域配置
+location ^~ /api/ {   #当访问/api路径时触发
+    proxy_pass http://127.0.0.1:8080/api/;    #配置代理服务 代理地址一般为后端服务地址
+    add_header 'Access-Control-Allow-Origin'  $http_origin;  #允许跨域的请求来源，设置为所有，必要时可更改具体的地址
+    add_header 'Access-Control-Allow-Credentials' 'true';    #允许携带证书（发送cookie）
+    add_header Access-Control-Allow-Methods 'GET,POST,OPTIONS';
+    add_header Access-Control-Allow-Headers '*';
+    if($request_method = 'OPTIONS'){
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        add_header 'Access-Control-Allow-Origin'  $http_origin;
+        add_header 'Access-Control-Allow-Methods' 'GET,POST,OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain;charset=utf-8';
+        add_header 'Content-Length' 0;
+        return 204;
+    }
+}
+```
+
+**2、后端跨域配置**
+
+后端跨域配置有不同方式，**推荐使用web全局请求拦截器来处理跨域**
+
+1. 配置@CrossOrigin注解
+
+   在Controller层上面配置@CrossOrigin注解，在注解里配置相应跨域要求
+
+   **2.添加web全局请求拦截器（推荐）**
+
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        //允许跨域的路径
+       registry.addMapping("/**")
+               //允许发送cookie
+               .allowCredentials(true)
+               //设置允许跨域请求的域名
+               //当** Credentials为true时，Origin不能为星号，需要为具体的ip地址
+               .allowedOrigins("http://47.113.185.5:8080")
+               //允许跨域的方法
+               .allowedMethods("*")
+               //跨域允许时间
+               .maxAge(3600);
+    }
+}
+```
+
+   3.定义corsFilterBean，参考教程实现
+
+
+
+## 项目优化点
+
+1.功能扩充
+
+1. 管理员创建用户、修改用户信息、删除用户
+2. 上传头像
+3. 按照更多的条件去查询用户
+4. 更改权限
+
+2.修改bug
+
+3.项目登录改用分布式session （单点登录 - redis）
+
+4.通用性
+
+1. set-cookie domain 域名更通用，比如改为 *.xxx.com
+
+5.后台添加全局请求拦截器(统一去判断用户权限、统一记录请求日志)
