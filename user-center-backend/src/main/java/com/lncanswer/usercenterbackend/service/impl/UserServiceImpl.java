@@ -1,30 +1,38 @@
 package com.lncanswer.usercenterbackend.service.impl;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lncanswer.usercenterbackend.common.ErrorCode;
+import com.lncanswer.usercenterbackend.constant.RedisConstant;
 import com.lncanswer.usercenterbackend.constant.UserConstant;
 import com.lncanswer.usercenterbackend.exception.BusinessException;
 import com.lncanswer.usercenterbackend.model.domain.User;
+import com.lncanswer.usercenterbackend.model.dto.UserDTO;
 import com.lncanswer.usercenterbackend.service.UserService;
 import com.lncanswer.usercenterbackend.mapper.UserMapper;
+import com.lncanswer.usercenterbackend.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.lncanswer.usercenterbackend.constant.RedisConstant.LOGIN_USER_KEY;
 import static com.lncanswer.usercenterbackend.constant.UserConstant.ADMIN_ROLE;
+import static com.lncanswer.usercenterbackend.constant.UserConstant.SALT;
 
 /**
 * @author JohnChen
@@ -36,17 +44,20 @@ import static com.lncanswer.usercenterbackend.constant.UserConstant.ADMIN_ROLE;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
 
-    /**
-     * 盐值加密 -- 混淆密码
-     */
-    private static final String SALT = "sin";
+//    /**
+//     * 盐值加密 -- 混淆密码
+//     */
+//    private static final String SALT = "sin";
 
     /**
      * 用户登录状态键值
      */
-    private static final String USER_LOGIN_STATE = "userLoginState";
+    //private static final String USER_LOGIN_STATE = "userLoginState";
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      *
@@ -131,7 +142,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 返回用户脱敏之后的信息
      */
     @Override
-    public User login(String userAccount, String password, String checkCode, HttpServletRequest request) {
+    public User login(String userAccount, String password, String checkCode, HttpServletRequest request, HttpServletResponse response) {
         //1、判断是否为空
         if (StringUtils.isAnyBlank(userAccount,password)){
             throw new  BusinessException(ErrorCode.PARAMS_ERROR,"输入的账号密码不能为空");
@@ -171,7 +182,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
         //5、记录用户登录状态
-        request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
+       // request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
+
+        //用redis记录用户登录状态
+        //生成一个token 作为登录令牌 TODO 后续可以优化 用JWT令牌
+        String token = UUID.randomUUID().toString();
+        //存储在redis中的用户信息简化，用UserDTO
+        UserDTO userDTO = BeanUtil.copyProperties(safetyUser, UserDTO.class);
+        //将UserDto对象所有字段类型转化为String 类型，并且存储在HashMap中
+        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                CopyOptions.create()
+                        .setIgnoreNullValue(true)
+                        .setFieldValueEditor((filedName, filedValue) ->
+                                filedValue.toString()));
+        //存储到redis中 Key前缀加token组成完整的key
+        stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY+token,userMap);
+        //设置过期时间
+        stringRedisTemplate.expire(LOGIN_USER_KEY+token, RedisConstant.LOGIN_USER_TTL, TimeUnit.SECONDS);
+
+        //将当前token存储到请求头中返回，Header
+        request.getSession().setAttribute("token",token);
+        //response.setHeader("authorization",token);
+        log.info("service token = {}",token);
+
+        //返回脱敏用户
         return safetyUser;
     }
 
@@ -186,6 +220,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (!isAdmin(request)){
             throw new BusinessException(ErrorCode.NO_AUTH,"仅管理员可查询");
         }
+
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
         if (StringUtils.isNotBlank(username)){
@@ -225,13 +260,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public User getCurrentUser(HttpServletRequest request) {
-        Object userOjb = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userOjb;
-        if (user == null){
+//        Object userOjb = request.getSession().getAttribute(USER_LOGIN_STATE);
+//        User user = (User) userOjb;
+
+        //从本地线程中获取当前用户 TODO 后续改进前端
+//        UserDTO user = UserHolder.getUser();
+//        if (user == null){
+//            return null;
+//        }
+
+        String token = (String) request.getSession().getAttribute("token");
+        if (token.isEmpty()){
+            //token不存在直接返回null
             return null;
         }
+        log.info("getToken = {}",token);
+        //从redis中获取用户信息
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(LOGIN_USER_KEY + token);
+        if (userMap.isEmpty()){
+            return null;
+        }
+        //转化为userDto
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+
         //获取当前登录的用户状态之后，再去数据库查询一次 是为了保证用户的信息是及时的
-        Long userId = user.getId();
+        Long userId = userDTO.getId();
         User newUser = this.getById(userId);
         return safetyUser(newUser);
     }
@@ -243,7 +296,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public void userLogout(HttpServletRequest request) {
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+       // request.getSession().removeAttribute(USER_LOGIN_STATE);
+
+        //改用redis
+        String token = (String) request.getSession().getAttribute("token");
+        stringRedisTemplate.delete(LOGIN_USER_KEY + token);
+        //移除session
+        request.getSession().removeAttribute("token");
+
+        //在拦截器统一移除本地线程用户 暂时不需要
+//        UserHolder.removeUser();
     }
 
     /**
@@ -252,7 +314,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return true or false
      */
     private boolean isAdmin(HttpServletRequest request){
-        User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
+        //User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
+
+        //从UserHolder本地线程获取当前用户，判断是否为管理员
+        UserDTO user = UserHolder.getUser();
         if (user == null || user.getUserRole() != ADMIN_ROLE){
             return false;
         }

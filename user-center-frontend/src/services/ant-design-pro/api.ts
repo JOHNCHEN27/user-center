@@ -4,10 +4,46 @@ import request from '@/plugins/globalRequest';
 
 /** 获取当前的用户 GET /api/user/current */
 export async function currentUser(options?: { [key: string]: any }) {
-  return request<API.BaseResponse<API.CurrentUser>>('/api/user/current', {
+  return  request<API.BaseResponse<API.CurrentUser>>('/api/user/current', {
     method: 'GET',
     ...(options || {}),
   });
+
+  //从localStorage取出token，判断token是否存在
+  // let token = localStorage.getItem('token')
+  // if(token == null){
+  //   const response = await fetch('/api/user/islogin', {
+  //     method: 'GET',
+  //     ...(options || {}),
+  //   });
+  //   //const data = await response.json(); // 从响应中提取JSON数据
+  //   const headers = response.headers; // 获取响应头信息
+  //
+  //   // 在这里处理响应头信息 获取 token
+  //   token = headers.get('authorization');
+  //   console.log('Content-Type:', token);
+  //
+  //   //过期时间设置为两小时
+  //   const currentTime = new Date();
+  //   const expirationTime = new Date(currentTime.getTime() + 2 * 60 * 60 * 1000);
+  //   //存到本地缓存中
+  //   localStorage.setItem('token',token);
+  //   localStorage.setItem('tokenExpiration',expirationTime)
+  // }
+  //
+  // // 在需要的时候，检查token是否过期
+  // const tokenExpiration = new Date(localStorage.getItem('tokenExpiration'));
+  // if (new Date() > tokenExpiration ){
+  //   //token已经过期 清除缓存过期时间 直接返回null
+  //   localStorage.removeItem("tokenExpiration");
+  //   return null;
+  // } else{
+  //   //token未过期
+  //   return token; // 返回从后端服务获取的数据
+  // }
+
+
+
 }
 
 /** 退出登录接口 POST /api/user/logout */

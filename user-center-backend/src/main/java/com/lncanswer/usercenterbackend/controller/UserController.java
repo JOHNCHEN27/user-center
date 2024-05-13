@@ -7,11 +7,13 @@ import com.lncanswer.usercenterbackend.model.domain.User;
 import com.lncanswer.usercenterbackend.model.domain.request.UserLoginRequest;
 import com.lncanswer.usercenterbackend.model.domain.request.UserRegisterRequest;
 import com.lncanswer.usercenterbackend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ import java.util.List;
  * @version 1.0
  * @date 2024/4/25 15:51
  */
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -54,7 +57,7 @@ public class UserController {
      * @return 返回统一响应数据
      */
     @PostMapping("/login")
-    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest loginRequest, HttpServletRequest request){
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response){
         if (loginRequest == null){
             return ResultUtils.error(ErrorCode.NULL_ERROR);
         }
@@ -64,7 +67,7 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
             return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
-        User user  = userService.login(userAccount, userPassword, checkCode, request);
+        User user  = userService.login(userAccount, userPassword, checkCode, request,response);
         return new BaseResponse<>(0,user,"ok");
     }
 
@@ -118,5 +121,24 @@ public class UserController {
     public BaseResponse<Boolean> deleteUser(@RequestBody long id,HttpServletRequest request){
         boolean b = userService.deleteById(id, request);
         return ResultUtils.success(b);
+    }
+
+
+    /**
+     * 判断用户是否已经登录
+     * @param request httpRequest对象
+     * @return 返回token
+     */
+    @GetMapping("/islogin")
+    public BaseResponse<String> islogin(HttpServletRequest request,HttpServletResponse response){
+        //判断是否有token 有则已登录
+        String token = request.getHeader("authorization");
+        log.info("token = {}",token);
+        if (token.isEmpty()){
+            return null;
+        }
+        //返回token
+        response.setHeader("authorization",token);
+        return  ResultUtils.success(token);
     }
 }

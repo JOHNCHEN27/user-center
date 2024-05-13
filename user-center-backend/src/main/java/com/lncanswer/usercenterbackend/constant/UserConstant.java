@@ -12,4 +12,11 @@ public interface UserConstant {
 
     //默认权限
     int DEFAULT_ROLE = 0;
+
+
+    /**
+     * 盐值加密 -- 混淆密码
+     */
+      String SALT = "sin";
+
 }

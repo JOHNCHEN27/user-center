@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 /**
@@ -62,6 +64,7 @@ public class User implements Serializable {
     /**
      * 创建时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
 
     /**
@@ -72,7 +75,7 @@ public class User implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic
+    @TableLogic //逻辑删除
     private Integer isDelete;
 
     /**

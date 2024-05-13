@@ -20,7 +20,7 @@ public class CorsConfig implements WebMvcConfigurer {
                .allowCredentials(true)
                //设置允许跨域请求的域名
                //当** Credentials为true时，Origin不能为星号，需要为具体的ip地址
-               .allowedOrigins("http://47.113.185.5:8080")
+               .allowedOrigins("http://47.113.185.5:8080","http://localhost:8000")
                //允许跨域的方法
                .allowedMethods("*")
                //跨域允许时间

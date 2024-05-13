@@ -17,7 +17,8 @@ public enum ErrorCode {
     OBJECT_NOT_NULL_ERROR(40002,"对象不为空",""),
     NOT_LOGIN(40100,"未登录",""),
     NO_AUTH(40101,"无权限", ""),
-    SYSTEM_ERROR(50000,"系统内部异常","");
+    SYSTEM_ERROR(50000,"系统内部异常",""),
+    SELECT_ERROR(40002,"查询错误","");
 
     /**
      * 状态码信息

@@ -4,6 +4,7 @@ import com.lncanswer.usercenterbackend.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public interface UserService extends IService<User> {
      * @param request    servletRequest请求 --前端发送过来的请求
      * @return 返回用户脱敏之后的信息
      */
-    User login(String userAccount, String password, String checkCode, HttpServletRequest request);
+    User login(String userAccount, String password, String checkCode, HttpServletRequest request, HttpServletResponse response);
 
     /**
      * 查询用户泪飙
