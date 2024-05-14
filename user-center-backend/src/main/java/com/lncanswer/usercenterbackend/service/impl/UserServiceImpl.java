@@ -15,6 +15,7 @@ import com.lncanswer.usercenterbackend.model.domain.User;
 import com.lncanswer.usercenterbackend.model.dto.UserDTO;
 import com.lncanswer.usercenterbackend.service.UserService;
 import com.lncanswer.usercenterbackend.mapper.UserMapper;
+import com.lncanswer.usercenterbackend.utils.RegexUtils;
 import com.lncanswer.usercenterbackend.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -78,9 +79,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //账户不能包含特殊字符
-        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (matcher.find()) {
+//        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+//        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+
+        //利用工具类来校验账号正则
+        if (RegexUtils.isAccountInvalid(userAccount)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能包含特殊字符");
         }
 
@@ -153,9 +156,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //2、账户不能包含特殊字符
-        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (matcher.find()) {
+       // String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+       // Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+
+        //改用工具类判断账号是否符合要求
+        if (RegexUtils.isAccountInvalid(userAccount)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号包含特殊字符");
         }
         //判断用户是否注册

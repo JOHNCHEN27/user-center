@@ -2,6 +2,9 @@ package com.lncanswer.usercenterbackend.utils;
 
 import cn.hutool.core.util.StrUtil;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author lnc
  * @description 正则表达式校验
@@ -39,5 +42,15 @@ public class RegexUtils {
             return true;
         }
         return !str.matches(regex);
+    }
+
+    /**
+     * 是否是无效账号
+     * @param userAccount 用户账号
+     * @return true:不符合，false：符合
+     */
+    public static boolean isAccountInvalid(String userAccount){
+        Matcher matcher = Pattern.compile(RegexPatterns.ACCOUNT_REGEX).matcher(userAccount);
+        return matcher.find();
     }
 }

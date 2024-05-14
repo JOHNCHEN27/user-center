@@ -21,4 +21,10 @@ public abstract class RegexPatterns {
      */
     public static final String VERIFY_CODE_REGEX = "^[a-zA-Z\\d]{6}$";
 
+    /**
+     * 验证账号正则 ，判断账号是否符合规范
+     */
+    public static final String ACCOUNT_REGEX = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+
+
 }

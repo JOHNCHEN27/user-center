@@ -35,7 +35,8 @@ public class MvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/user/register",
                                      "/user/login",
                                      "/user/logout",
-                                     "/user/current"
+                                     "/user/current",
+                        "/admin/*"
                                     ).order(1);
         //order指定哪个拦截器先执行， order权值越大执行顺序越低
         //拦截所有请求 Token刷新拦截器

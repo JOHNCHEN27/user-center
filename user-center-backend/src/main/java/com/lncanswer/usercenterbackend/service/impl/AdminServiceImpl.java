@@ -3,12 +3,12 @@ package com.lncanswer.usercenterbackend.service.impl;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lncanswer.usercenterbackend.common.BaseResponse;
 import com.lncanswer.usercenterbackend.common.ErrorCode;
 import com.lncanswer.usercenterbackend.exception.BusinessException;
 import com.lncanswer.usercenterbackend.mapper.AdminMapper;
 import com.lncanswer.usercenterbackend.model.domain.User;
 import com.lncanswer.usercenterbackend.service.AdminService;
+import com.lncanswer.usercenterbackend.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -17,8 +17,6 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.lncanswer.usercenterbackend.constant.UserConstant.SALT;
 
@@ -45,9 +43,9 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, User> implements 
         String userPassword = user.getUserPassword();
 
         //账号不能包含特殊字符
-        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (matcher.find()) {
+       // String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        //Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if (RegexUtils.isAccountInvalid(userAccount)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号包含特殊字符");
         }
 
@@ -123,13 +121,15 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, User> implements 
             //"^0\\d{2}-\\d{8}$"
             // 匹配以0开头的带三位区号的座机号，格式如：010-12345678
 
-            boolean matches = Pattern.matches("^1[3-9]\\d{9}$|" +
-                    "^1[3-9]\\d{1}[-\\s]\\d{4}[-\\s]\\d{4}$|" +
-                    "^\\(1[3-9]\\d{1}\\)\\d{4}-\\d{4}$|" +
-                    "^(?:\\(\\+\\d{2}\\)|\\+\\d{2})(\\d{11})$|" +
-                    "^0\\d{3}-\\d{7}$|" +
-                    "^0\\d{2}-\\d{8}$", phone);
-            if (!matches){
+//            boolean matches = Pattern.matches("^1[3-9]\\d{9}$|" +
+//                    "^1[3-9]\\d{1}[-\\s]\\d{4}[-\\s]\\d{4}$|" +
+//                    "^\\(1[3-9]\\d{1}\\)\\d{4}-\\d{4}$|" +
+//                    "^(?:\\(\\+\\d{2}\\)|\\+\\d{2})(\\d{11})$|" +
+//                    "^0\\d{3}-\\d{7}$|" +
+//                    "^0\\d{2}-\\d{8}$", phone);
+
+            //改为工具类判断手机号正则
+            if (RegexUtils.isPhoneInvalid(phone)){
                 throw new BusinessException(ErrorCode.PARAMS_ERROR,"手机号格式有误");
             }
         }
@@ -137,13 +137,14 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, User> implements 
         //验证邮箱格式
         String email = user.getEmail();
         if (StringUtils.isNotBlank(email)) {
-            String validEmailPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-            boolean matches = Pattern.compile(validEmailPattern).matcher(email).matches();
-            if (!matches) {
+           // String validEmailPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+           // boolean matches = Pattern.compile(validEmailPattern).matcher(email).matches();
+
+            //改为工具类判断邮箱正则
+            if (RegexUtils.isEmailInvalid(email)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
             }
         }
-
         //更新用户到数据库
         int result = adminMapper.updateById(user);
         if (result == 0){
