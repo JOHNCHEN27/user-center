@@ -5,14 +5,13 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lncanswer.usercenterbackend.common.ErrorCode;
+import com.lncanswer.usercenterbackend.constant.MinioConstant;
 import com.lncanswer.usercenterbackend.constant.RedisConstant;
-import com.lncanswer.usercenterbackend.constant.UserConstant;
 import com.lncanswer.usercenterbackend.exception.BusinessException;
 import com.lncanswer.usercenterbackend.model.domain.User;
-import com.lncanswer.usercenterbackend.model.dto.UserDTO;
+import com.lncanswer.usercenterbackend.model.domain.dto.UserDTO;
 import com.lncanswer.usercenterbackend.service.UserService;
 import com.lncanswer.usercenterbackend.mapper.UserMapper;
 import com.lncanswer.usercenterbackend.utils.RegexUtils;
@@ -27,8 +26,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.lncanswer.usercenterbackend.constant.RedisConstant.LOGIN_USER_KEY;
@@ -125,8 +122,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         newUser.setUsername(username);
         newUser.setUserAccount(userAccount);
         newUser.setPlanetCode(planetCode);
-        //使用默认头像
-        newUser.setAvatarUrl("https://picx.zhimg.com/80/v2-b1bc73ed804303e2952bcdcda631f2f0_1440w.webp?source=2c26e567");
+        //使用默认头像 改用minio中的默认头像
+        newUser.setAvatarUrl(MinioConstant.imageUrl);
         newUser.setUserPassword(encryptPassword);
 
         boolean saveResult = this.save(newUser);
@@ -274,7 +271,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //            return null;
 //        }
 
-        String token = (String) request.getSession().getAttribute("token");
+        Object attribute = request.getSession().getAttribute("token");
+        if (attribute == null){
+            return null;
+        }
+        String token = (String) attribute;
         if (token.isEmpty()){
             //token不存在直接返回null
             return null;

@@ -1,6 +1,6 @@
 package com.lncanswer.usercenterbackend.utils;
 
-import com.lncanswer.usercenterbackend.model.dto.UserDTO;
+import com.lncanswer.usercenterbackend.model.domain.dto.UserDTO;
 
 /**
  * @author LNC

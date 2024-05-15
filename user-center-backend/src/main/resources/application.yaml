@@ -1,3 +1,4 @@
+#配置文件加载相同的配置会被优先级高的配置文件的内容覆盖
 spring:
   application:
     name: user-center
@@ -30,3 +31,11 @@ mybatis-plus:
       logic-delete-field: isDelete #逻辑删除对于的实体字段名
       logic-delete-value: 1 #逻辑已删除值
       logic-not-delete-value: 0 #逻辑未删除值
+#minio配置
+minio:
+  endpoint: http://47.113.185.5:9000
+  accessKey: ! '@lncminio007'     #如果自定义属性中包含特殊字符，需要用 ！'属性值' 包含起来
+  secretKey: ! '@lncminio007'
+  bucket:
+    files: mediafiles
+    videofiles: video

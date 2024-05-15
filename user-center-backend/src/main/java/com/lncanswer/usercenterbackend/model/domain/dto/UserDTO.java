@@ -1,4 +1,4 @@
-package com.lncanswer.usercenterbackend.model.dto;
+package com.lncanswer.usercenterbackend.model.domain.dto;
 
 import lombok.Data;
 

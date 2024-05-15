@@ -4,6 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lncanswer.usercenterbackend.common.ErrorCode;
+import com.lncanswer.usercenterbackend.constant.MinioConstant;
 import com.lncanswer.usercenterbackend.exception.BusinessException;
 import com.lncanswer.usercenterbackend.mapper.AdminMapper;
 import com.lncanswer.usercenterbackend.model.domain.User;
@@ -73,7 +74,8 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, User> implements 
         user.setUserPassword(encryptPassword);
         String userName = RandomUtil.randomString(8);
         user.setUsername(userName);
-        user.setAvatarUrl("https://picx.zhimg.com/80/v2-b1bc73ed804303e2952bcdcda631f2f0_1440w.webp?source=2c26e567");
+        //改用minio分布式文件系统中的初始头像
+        user.setAvatarUrl(MinioConstant.imageUrl);
 
         boolean save = this.save(user);
         if (!save){

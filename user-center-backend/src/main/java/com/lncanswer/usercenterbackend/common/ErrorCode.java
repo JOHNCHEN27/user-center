@@ -18,7 +18,8 @@ public enum ErrorCode {
     NOT_LOGIN(40100,"未登录",""),
     NO_AUTH(40101,"无权限", ""),
     SYSTEM_ERROR(50000,"系统内部异常",""),
-    SELECT_ERROR(40002,"查询错误","");
+    SELECT_ERROR(40002,"查询错误",""),
+    UPDATE_ERROR(40003,"更新错误","");
 
     /**
      * 状态码信息

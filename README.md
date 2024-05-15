@@ -446,7 +446,7 @@ docker build -t user-center-frontend:v0.0.1 .
 **利用前端项目镜像创建容器**
 
 ```
-docker run -d --name user-center-frontend -p 80:80   user-center-fronted:v0.0.1
+docker run -d --name user-center-frontend -p 80:80   user-center-frontend:v0.0.1
 ```
 
 **命令解释:** run 表示运行一个容器，  -d 表示后台运行， --name 表示为这个容器取名， -p 指定宿主机与容器映射的端口号（前者为宿主机端口也就是云服务器端口，后者为容器端口）， 最后指定镜像名称表示利用哪个镜像来构建容器.
@@ -699,10 +699,16 @@ public class CorsConfig implements WebMvcConfigurer {
    - 新建AdminController，以及Service接口及其实现类等
    - 在AdminController中完成请求接受，Service实现类中完成业务逻辑，对账号密码等参数进行校验
    - 根据完成的功能进行单元测试
-2. 上传头像
+2. 上传头像  -- 利用minio分布式文件系统存储媒体信息（头像，视频等）
+   -  pom文件引入minio依赖
+   - 配置文件applicaiton.yaml中配置minio地址等信息
+   - 编写minio配置类，使用value注解读取application.yaml中的minio配置属性，将minioClient注册为bean来使用
+   - 创建实体类MediaFiles类，创建对应的数据库表存储媒资文件信息（头像、视频、音频等）
+   - 新建MediaFiles响应的Controller \ Service \ Mapper
+   - 在Service中编写上传文件的逻辑
+   
 3. 按照更多的条件去查询用户  √
    - 利用Mabatis-Plus提供的lambda查询对象参数，对传递的用户参数进行多条件查询
-
 4. 更改权限
 
 2.修改bug   持续改进中
@@ -710,6 +716,7 @@ public class CorsConfig implements WebMvcConfigurer {
 3.项目登录改用分布式session （单点登录 - redis）
 
 - 引用redis依赖
+- application中配置redis地址
 - 将用户登录后存储的登录状态改为redis存储，并且在本地线程中存储一份
 - 登录退出均采用redis实现，在redis读取用户登录状态
 

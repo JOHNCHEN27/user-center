@@ -2,16 +2,14 @@ package com.lncanswer.usercenterbackend.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.lncanswer.usercenterbackend.constant.RedisConstant;
-import com.lncanswer.usercenterbackend.model.dto.UserDTO;
+import com.lncanswer.usercenterbackend.model.domain.dto.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.ws.Holder;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 

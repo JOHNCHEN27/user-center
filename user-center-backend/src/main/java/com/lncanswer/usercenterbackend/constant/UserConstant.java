@@ -1,5 +1,7 @@
 package com.lncanswer.usercenterbackend.constant;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * @author LNC
  * @version 1.0
@@ -18,5 +20,6 @@ public interface UserConstant {
      * 盐值加密 -- 混淆密码
      */
       String SALT = "sin";
+
 
 }

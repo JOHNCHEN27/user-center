@@ -4,7 +4,7 @@ spring:
     name: user-center
   datasource:
     url: jdbc:mysql://47.113.185.5:3306/user_center
-    password: root
+    password: rootlnc
     username: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   session: #session 一天失效
